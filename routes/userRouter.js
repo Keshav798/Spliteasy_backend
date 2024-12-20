@@ -4,7 +4,8 @@ const {
     createUser,
     getUser,
     updateUser,
-    deleteUser
+    deleteUser,
+    addFriend
 }=require("../controllers/userController");
 
 const router=express.Router();
@@ -12,5 +13,7 @@ const router=express.Router();
 router.route("/").get(getAllUsers).post(createUser);
 
 router.route("/:userId").get(getUser).put(updateUser).delete(deleteUser);
+
+router.route("/:userId/friends/:friendId").put(addFriend);
 
 module.exports=router;

@@ -29,7 +29,7 @@ const UserSchema = mongoose.Schema({
     type: Number,
     default: 0
   },
-  SplitList: [
+  splitList: [
     {
       splitId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -61,7 +61,7 @@ const UserSchema = mongoose.Schema({
         type: Number,
         default: 0
       },
-      ShareList: [
+      shareList: [
         {
           type: mongoose.Schema.Types.ObjectId,
           ref: "Share"
