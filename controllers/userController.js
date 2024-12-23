@@ -1,9 +1,10 @@
 const asyncHandler=require("express-async-handler");
-const User = require('../models/userModel') 
+const User = require('../models/userModel'); 
+const Share = require('../models/shareModel'); 
 
 const getAllUsers = asyncHandler(async (req,res) => {
     const users = await User.find({});
-    res.status(200).json({message:"Succes", users:users});
+    res.status(200).json({message:"Success", users:users});
 });
 
 const createUser = asyncHandler(async (req,res) => {
@@ -30,7 +31,7 @@ const getUser = asyncHandler(async (req,res) => {
         res.status(404);
         throw new Error("User not found");
     }
-    res.status(200).json({message:"Succes", user:user});
+    res.status(200).json({message:"Success", user:user});
 });
 
 const updateUser = asyncHandler(async (req,res) => {
@@ -43,24 +44,27 @@ const deleteUser = asyncHandler(async (req,res) => {
     res.json({message:"Deleted user"});
 });
 
-const addFriend = asyncHandler(async (req,res) => {
-    const userId=req.params.userId;
-    const friendId=req.params.friendId;
-    const user = await User.findOne({userId:userId});
-    const friend = await User.findOne({userId:friendId});
-    if(user==null){
+const addFriend = asyncHandler(async (req, res) => {
+    const userId = req.params.userId;
+    const friendId = req.params.friendId;
+
+    const user = await User.findOne({ userId: userId });
+    const friend = await User.findOne({ userId: friendId });
+
+    if (!user) {
         res.status(404);
         throw new Error("User not found");
     }
-    if(friend==null){
+    if (!friend) {
         res.status(404);
         throw new Error("Friend not found");
     }
-    if(userId==friendId){
+    if (userId === friendId) {
         res.status(403);
-        throw new Error("User and friend ids are same");
+        throw new Error("User and friend IDs are the same");
     }
-     // Check if the friend already exists in the user's friendList
+
+    // Check if the friend already exists in the user's friendList
     const userHasFriend = user.friendList.some(f => f.userId.toString() === friendId);
     const friendHasUser = friend.friendList.some(f => f.userId.toString() === userId);
 
@@ -69,25 +73,61 @@ const addFriend = asyncHandler(async (req,res) => {
         throw new Error("Friend already exists in the friend list");
     }
 
+    // Find common shares between user and friend
+    const shares = await Share.find({
+        $or: [
+            { userPrimary: userId, userSecondary: friendId },
+            { userPrimary: friendId, userSecondary: userId }
+        ]
+    });
+
+    // Calculate the total owed/lended amount (default to 0 if no shares found)
+    let totalAmount = 0;
+    const shareIds = [];
+
+    shares.forEach(share => {
+        shareIds.push(share.shareId);
+        if (share.userPrimary.toString() === userId) {
+            totalAmount += share.amount; // Amount owed by user to friend
+        } else if (share.userPrimary.toString() === friendId) {
+            totalAmount -= share.amount; // Amount owed by friend to user
+        }
+    });
+
+    // Add each other to their friendLists
     user.friendList.push({
-        userId:friendId,
-        name:friend.name,
-        amount:0,
-        shareList:[]
+        userId: friendId,
+        name: friend.name,
+        amount: totalAmount,
+        shareList: shareIds
     });
 
     friend.friendList.push({
-        userId:userId,
-        name:user.name,
-        amount:0,
-        shareList:[]
+        userId: userId,
+        name: user.name,
+        amount: -totalAmount, // Opposite for the friend
+        shareList: shareIds
     });
 
-    await User.findOneAndUpdate({userId:userId},user);
-    await User.findOneAndUpdate({userId:friendId},friend);
+    // Save the updates
+    await user.save();
+    await friend.save();
 
-    res.status(200).json({message:"Success",user:user,friend,friend});
+    res.status(200).json({
+        message: "Success",
+        user: {
+            userId: user.userId,
+            name:user.name,
+            friendList: user.friendList
+        },
+        friend: {
+            userId: friend.userId,
+            name:friend.name,
+            friendList: friend.friendList
+        }
+    });
 });
+
 
 module.exports={
     getAllUsers,

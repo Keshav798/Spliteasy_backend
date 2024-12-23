@@ -1,6 +1,5 @@
-// Share.js
 const mongoose = require('mongoose');
- 
+
 const ShareSchema = mongoose.Schema({
   shareId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -25,19 +24,17 @@ const ShareSchema = mongoose.Schema({
     type: Number,
     required: true
   },
-  splits : [
-    {
-      splitName: {
-        type: String,
-        required: true
-      },
-      splitId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Split",
-        required: true
-      }
+  split: { // Replace splits array with single split field
+    splitName: {
+      type: String,
+      required: true
+    },
+    splitId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Split",
+      required: true
     }
-  ]
+  }
 }, {
   timestamps: true
 });
