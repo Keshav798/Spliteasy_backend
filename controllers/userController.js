@@ -1,4 +1,5 @@
 const asyncHandler=require("express-async-handler");
+const bcrypt=require("bcrypt");
 const User = require('../models/userModel'); 
 const Share = require('../models/shareModel'); 
 
@@ -15,10 +16,12 @@ const createUser = asyncHandler(async (req,res) => {
         throw new Error("All fields are Mandatory(name, email, password)")
     }
 
+    const hashedPassword=await bcrypt.hash(password,10);
+
     const user = await User.create({
         name:name,
         email:email,
-        password:password,
+        password:hashedPassword,
     })
 
     res.status(201).json({ message: "Success", user });

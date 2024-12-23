@@ -7,7 +7,7 @@ const errorHandler = (error, req, res, next) => {
     const response = {
         title: "Error",
         message: error.message || "An unexpected error occurred.",
-        stackTrace: process.env.NODE_ENV === "development" ? error.stack : "Stack trace hidden in production",
+        stackTrace:error.stack
     };
 
     // Check for specific error cases
