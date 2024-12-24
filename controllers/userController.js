@@ -1,57 +1,57 @@
-const asyncHandler=require("express-async-handler");
-const bcrypt=require("bcrypt");
-const User = require('../models/userModel'); 
-const Share = require('../models/shareModel'); 
+//user controller
+const asyncHandler = require("express-async-handler");
+const bcrypt = require("bcrypt");
+const User = require('../models/userModel');
+const Share = require('../models/shareModel');
 
-const getAllUsers = asyncHandler(async (req,res) => {
+const getAllUsers = asyncHandler(async (req, res) => {
     const users = await User.find({});
-    res.status(200).json({message:"Success", users:users});
+    res.status(200).json({ message: "Success", users: users });
 });
 
-const createUser = asyncHandler(async (req,res) => {
-
+const createUser = asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
         res.status(400);
-        throw new Error("All fields are Mandatory(name, email, password)")
+        throw new Error("All fields are Mandatory(name, email, password)");
     }
 
-    const hashedPassword=await bcrypt.hash(password,10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({
-        name:name,
-        email:email,
-        password:hashedPassword,
-    })
+        name: name,
+        email: email,
+        password: hashedPassword,
+    });
 
     res.status(201).json({ message: "Success", user });
 });
 
-const getUser = asyncHandler(async (req,res) => {
-    const userId=req.params.userId;
-    const user = await User.findOne({userId:userId});
-    if(user==null){
+const getUser = asyncHandler(async (req, res) => {
+    const userId = req.params.userId.toString();
+    const user = await User.findOne({ userId });
+    if (!user) {
         res.status(404);
         throw new Error("User not found");
     }
-    res.status(200).json({message:"Success", user:user});
+    res.status(200).json({ message: "Success", user: user });
 });
 
-const updateUser = asyncHandler(async (req,res) => {
-    const id="test_id_from_req_body";
-    res.json({message:"Update user"});
+const updateUser = asyncHandler(async (req, res) => {
+    const id = "test_id_from_req_body";
+    res.json({ message: "Update user" });
 });
 
-const deleteUser = asyncHandler(async (req,res) => {
-    const id="test_id_from_req_body";
-    res.json({message:"Deleted user"});
+const deleteUser = asyncHandler(async (req, res) => {
+    const id = "test_id_from_req_body";
+    res.json({ message: "Deleted user" });
 });
 
 const addFriend = asyncHandler(async (req, res) => {
-    const userId = req.params.userId;
-    const friendId = req.params.friendId;
+    const userId = req.params.userId.toString();
+    const friendId = req.params.friendId.toString();
 
-    const user = await User.findOne({ userId: userId });
+    const user = await User.findOne({ userId });
     const friend = await User.findOne({ userId: friendId });
 
     if (!user) {
@@ -67,7 +67,6 @@ const addFriend = asyncHandler(async (req, res) => {
         throw new Error("User and friend IDs are the same");
     }
 
-    // Check if the friend already exists in the user's friendList
     const userHasFriend = user.friendList.some(f => f.userId.toString() === friendId);
     const friendHasUser = friend.friendList.some(f => f.userId.toString() === userId);
 
@@ -76,28 +75,25 @@ const addFriend = asyncHandler(async (req, res) => {
         throw new Error("Friend already exists in the friend list");
     }
 
-    // Find common shares between user and friend
     const shares = await Share.find({
         $or: [
-            { userPrimary: userId, userSecondary: friendId },
-            { userPrimary: friendId, userSecondary: userId }
+            { "userPrimary.userId": userId, "userSecondary.userId": friendId },
+            { "userPrimary.userId": friendId, "userSecondary.userId": userId }
         ]
     });
 
-    // Calculate the total owed/lended amount (default to 0 if no shares found)
     let totalAmount = 0;
     const shareIds = [];
 
     shares.forEach(share => {
         shareIds.push(share.shareId);
-        if (share.userPrimary.toString() === userId) {
-            totalAmount += share.amount; // Amount owed by user to friend
-        } else if (share.userPrimary.toString() === friendId) {
-            totalAmount -= share.amount; // Amount owed by friend to user
+        if (share.userPrimary.userId.toString() === userId) {
+            totalAmount += share.amount;
+        } else if (share.userPrimary.userId.toString() === friendId) {
+            totalAmount -= share.amount;
         }
     });
 
-    // Add each other to their friendLists
     user.friendList.push({
         userId: friendId,
         name: friend.name,
@@ -108,11 +104,10 @@ const addFriend = asyncHandler(async (req, res) => {
     friend.friendList.push({
         userId: userId,
         name: user.name,
-        amount: -totalAmount, // Opposite for the friend
+        amount: -totalAmount,
         shareList: shareIds
     });
 
-    // Save the updates
     await user.save();
     await friend.save();
 
@@ -120,23 +115,167 @@ const addFriend = asyncHandler(async (req, res) => {
         message: "Success",
         user: {
             userId: user.userId,
-            name:user.name,
+            name: user.name,
             friendList: user.friendList
         },
         friend: {
             userId: friend.userId,
-            name:friend.name,
+            name: friend.name,
             friendList: friend.friendList
         }
     });
 });
 
-
-module.exports={
+module.exports = {
     getAllUsers,
     createUser,
     getUser,
     updateUser,
     deleteUser,
     addFriend
-}
+};
+
+
+
+// const asyncHandler=require("express-async-handler");
+// const bcrypt=require("bcrypt");
+// const User = require('../models/userModel'); 
+// const Share = require('../models/shareModel'); 
+
+// const getAllUsers = asyncHandler(async (req,res) => {
+//     const users = await User.find({});
+//     res.status(200).json({message:"Success", users:users});
+// });
+
+// const createUser = asyncHandler(async (req,res) => {
+
+//     const { name, email, password } = req.body;
+//     if (!name || !email || !password) {
+//         res.status(400);
+//         throw new Error("All fields are Mandatory(name, email, password)")
+//     }
+
+//     const hashedPassword=await bcrypt.hash(password,10);
+
+//     const user = await User.create({
+//         name:name,
+//         email:email,
+//         password:hashedPassword,
+//     })
+
+//     res.status(201).json({ message: "Success", user });
+// });
+
+// const getUser = asyncHandler(async (req,res) => {
+//     const userId=req.params.userId;
+//     const user = await User.findOne({userId:userId});
+//     if(user==null){
+//         res.status(404);
+//         throw new Error("User not found");
+//     }
+//     res.status(200).json({message:"Success", user:user});
+// });
+
+// const updateUser = asyncHandler(async (req,res) => {
+//     const id="test_id_from_req_body";
+//     res.json({message:"Update user"});
+// });
+
+// const deleteUser = asyncHandler(async (req,res) => {
+//     const id="test_id_from_req_body";
+//     res.json({message:"Deleted user"});
+// });
+
+// const addFriend = asyncHandler(async (req, res) => {
+//     const userId = req.params.userId;
+//     const friendId = req.params.friendId;
+
+//     const user = await User.findOne({ userId: userId });
+//     const friend = await User.findOne({ userId: friendId });
+
+//     if (!user) {
+//         res.status(404);
+//         throw new Error("User not found");
+//     }
+//     if (!friend) {
+//         res.status(404);
+//         throw new Error("Friend not found");
+//     }
+//     if (userId === friendId) {
+//         res.status(403);
+//         throw new Error("User and friend IDs are the same");
+//     }
+
+//     // Check if the friend already exists in the user's friendList
+//     const userHasFriend = user.friendList.some(f => f.userId.toString() === friendId);
+//     const friendHasUser = friend.friendList.some(f => f.userId.toString() === userId);
+
+//     if (userHasFriend || friendHasUser) {
+//         res.status(403);
+//         throw new Error("Friend already exists in the friend list");
+//     }
+
+//     // Find common shares between user and friend
+//     const shares = await Share.find({
+//         $or: [
+//             { userPrimary: userId, userSecondary: friendId },
+//             { userPrimary: friendId, userSecondary: userId }
+//         ]
+//     });
+
+//     // Calculate the total owed/lended amount (default to 0 if no shares found)
+//     let totalAmount = 0;
+//     const shareIds = [];
+
+//     shares.forEach(share => {
+//         shareIds.push(share.shareId);
+//         if (share.userPrimary.toString() === userId) {
+//             totalAmount += share.amount; // Amount owed by user to friend
+//         } else if (share.userPrimary.toString() === friendId) {
+//             totalAmount -= share.amount; // Amount owed by friend to user
+//         }
+//     });
+
+//     // Add each other to their friendLists
+//     user.friendList.push({
+//         userId: friendId,
+//         name: friend.name,
+//         amount: totalAmount,
+//         shareList: shareIds
+//     });
+
+//     friend.friendList.push({
+//         userId: userId,
+//         name: user.name,
+//         amount: -totalAmount, // Opposite for the friend
+//         shareList: shareIds
+//     });
+
+//     // Save the updates
+//     await user.save();
+//     await friend.save();
+
+//     res.status(200).json({
+//         message: "Success",
+//         user: {
+//             userId: user.userId,
+//             name:user.name,
+//             friendList: user.friendList
+//         },
+//         friend: {
+//             userId: friend.userId,
+//             name:friend.name,
+//             friendList: friend.friendList
+//         }
+//     });
+// });
+
+
+// module.exports={
+//     getAllUsers,
+//     createUser,
+//     getUser,
+//     updateUser,
+//     deleteUser,
+//     addFriend
+// }

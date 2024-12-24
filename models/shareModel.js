@@ -16,14 +16,26 @@ const ShareSchema = mongoose.Schema({
     default: false
   },
   userPrimary: {
+    userId : {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true
+    },
+    userName : {
+      type: String,
+      required: true
+    }
   },
   userSecondary: {
+    userId : {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true
+    },
+    userName : {
+      type: String,
+      required: true
+    }
   },
   amount: {
     type: Number,
