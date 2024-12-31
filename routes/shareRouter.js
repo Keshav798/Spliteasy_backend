@@ -8,10 +8,15 @@ const {
     deleteShare,
     clearShare
 }=require("../controllers/shareController");
+const validateToken = require('../middlewares/validateTokenHandler');
 
 const router=express.Router();
 
-router.route("/").get(getAllShares).post(createShare);
+router.route("/").get(getAllShares);
+
+router.use(validateToken);
+
+router.route("/").post(createShare);
 
 router.route("/:shareId").get(getShare).put(updateShare).delete(deleteShare);
 

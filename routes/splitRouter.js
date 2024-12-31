@@ -7,10 +7,15 @@ const {
     deleteSplit,
     addUserToSplit
 }=require("../controllers/splitController");
+const validateToken = require('../middlewares/validateTokenHandler');
 
 const router=express.Router();
 
-router.route("/").get(getAllSplits).post(createSplit);
+router.route("/").get(getAllSplits);
+
+router.use(validateToken);
+
+router.route("/").post(createSplit);
 
 router.route("/addUser").post(addUserToSplit);
 

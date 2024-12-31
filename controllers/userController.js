@@ -3,6 +3,7 @@ const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcrypt");
 const User = require('../models/userModel');
 const Share = require('../models/shareModel');
+const jwt = require('jsonwebtoken');
 
 const getAllUsers = asyncHandler(async (req, res) => {
     const users = await User.find({});
@@ -25,6 +26,39 @@ const createUser = asyncHandler(async (req, res) => {
     });
 
     res.status(201).json({ message: "Success", user });
+});
+
+const loginUser = asyncHandler(async (req, res) => {
+
+    const { email, password } = req.body;
+    if (!email || !password) {
+        res.status(400);
+        throw new Error("All fields are Mandatory(email, password)");
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+        res.status(400);
+        throw new Error("User Not Registered!");
+    }
+
+    // Compare password with Hashed Password
+    if (user && (await bcrypt.compare(password, user.password))) {
+        const accessToken = jwt.sign({
+            user: {
+                name: user.name,
+                email: user.email,
+                userId: user.userId
+            },
+        },
+            process.env.ACCESS_TOKEN_SECRET,
+            { expiresIn: "30d" }
+        )
+        res.status(200).json({ message: "User Logged In Successfully!", accessToken });
+    } else {
+        res.status(401);
+        throw new Error("Email or Password is not incorrect!")
+    }
 });
 
 const getUser = asyncHandler(async (req, res) => {
@@ -129,6 +163,7 @@ const addFriend = asyncHandler(async (req, res) => {
 module.exports = {
     getAllUsers,
     createUser,
+    loginUser,
     getUser,
     updateUser,
     deleteUser,
