@@ -2,6 +2,7 @@ const express=require("express");
 const dotenv=require("dotenv").config();
 const errorHandler = require('./middlewares/errorHandler');
 const connectDb = require('./config/dbConnection');
+const cors = require('cors');
 
 connectDb();
 const app = express();
@@ -11,6 +12,10 @@ const port=process.env.PORT;
 const userRouter=require("./routes/userRouter");
 const splitRouter=require("./routes/splitRouter");
 const shareRouter=require("./routes/shareRouter");
+
+app.use(cors({
+  origin: '*' // Allows all origins. Replace '*' with your Flutter app's origin if needed.
+}));
 
 app.use(express.json());
 

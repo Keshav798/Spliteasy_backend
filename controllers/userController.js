@@ -54,7 +54,7 @@ const loginUser = asyncHandler(async (req, res) => {
             process.env.ACCESS_TOKEN_SECRET,
             { expiresIn: "30d" }
         )
-        res.status(200).json({ message: "User Logged In Successfully!", accessToken });
+        res.status(200).json({ message: "User Logged In Successfully!", accessToken, userId : user.userId });
     } else {
         res.status(401);
         throw new Error("Email or Password is not incorrect!")
