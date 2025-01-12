@@ -75,6 +75,39 @@ const getSplit = asyncHandler(async (req, res) => {
     res.status(200).json({ message: "Success", split: split });
 });
 
+const getStaticSplitData = asyncHandler(async (req, res) => {
+    const splitId = req.params.splitId.toString();
+
+    // Find the split document
+    const split = await Split.findOne({ splitId });
+
+    if (!split) {
+        res.status(404);
+        throw new Error("Split not found");
+    }
+
+    // Extract title
+    const title = split.title;
+
+    // Find the creator's name by matching createdBy with the users' userId
+    const createdByUser = split.users.find(user => user.userId.toString() === split.createdBy.toString());
+    const createdBy = createdByUser ? createdByUser.userName : "Unknown";
+
+    // Extract participant names
+    const participants = split.users.map(user => user.userName);
+
+    // Respond with the desired data
+    res.status(200).json({
+        message: "Success",
+        split: {
+            title: title,
+            createdBy: createdBy,
+            participants: participants
+        }
+    });
+});
+
+
 const updateSplit = asyncHandler(async (req, res) => {
     const id = "test_id_from_req_body";
     res.json({ message: "Update split" });
@@ -134,7 +167,8 @@ module.exports = {
     getSplit,
     updateSplit,
     deleteSplit,
-    addUserToSplit
+    addUserToSplit,
+    getStaticSplitData
 };
 
 
