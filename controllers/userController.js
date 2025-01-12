@@ -160,6 +160,28 @@ const addFriend = asyncHandler(async (req, res) => {
     });
 });
 
+const getUserShares = asyncHandler(async (req, res) => {
+    const userId = req.params.userId.toString();
+    const user = await User.findOne({ userId });
+    if (!user) {
+        res.status(404);
+        throw new Error("User not found");
+    }
+
+    const shares = await Share.find({
+      $or: [
+        { "userPrimary.userId": userId },
+        { "userSecondary.userId": userId }
+      ]
+    });    
+
+    res.status(200).json({
+        message: "Success",
+        shares: shares 
+    });
+
+});
+
 module.exports = {
     getAllUsers,
     createUser,
@@ -167,7 +189,8 @@ module.exports = {
     getUser,
     updateUser,
     deleteUser,
-    addFriend
+    addFriend,
+    getUserShares
 };
 
 

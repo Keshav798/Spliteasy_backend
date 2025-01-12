@@ -14,7 +14,9 @@ const splitRouter=require("./routes/splitRouter");
 const shareRouter=require("./routes/shareRouter");
 
 app.use(cors({
-  origin: '*' // Allows all origins. Replace '*' with your Flutter app's origin if needed.
+  origin: '*',// Allows all origins. Replace '*' with your Flutter app's origin if needed.
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
