@@ -91,10 +91,16 @@ const getStaticSplitData = asyncHandler(async (req, res) => {
 
     // Find the creator's name by matching createdBy with the users' userId
     const createdByUser = split.users.find(user => user.userId.toString() === split.createdBy.toString());
-    const createdBy = createdByUser ? createdByUser.userName : "Unknown";
+    const createdBy = {
+        "name" : createdByUser ? createdByUser.userName : "Unknown",
+        "userId" : createdByUser ? createdByUser.userId : "no_id"
+    }
 
-    // Extract participant names
-    const participants = split.users.map(user => user.userName);
+    const participants=[];
+    for(var user in split.users) participants.push({
+        "name":split.users[user].userName,
+        "userId":split.users[user].userId
+        });
 
     // Respond with the desired data
     res.status(200).json({
