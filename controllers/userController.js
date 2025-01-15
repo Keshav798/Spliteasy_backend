@@ -83,10 +83,16 @@ const deleteUser = asyncHandler(async (req, res) => {
 
 const addFriend = asyncHandler(async (req, res) => {
     const userId = req.params.userId.toString();
-    const friendId = req.params.friendId.toString();
+
+    const {friendEmail} = req.body;
+    if(!friendEmail){
+        res.status(400);
+        throw new Error("Email is required");
+    }
 
     const user = await User.findOne({ userId });
-    const friend = await User.findOne({ userId: friendId });
+    const friend = await User.findOne({ email: friendEmail });
+    const friendId=friend.userId.toString();
 
     if (!user) {
         res.status(404);
